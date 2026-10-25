@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.maintenance_predict</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="maintenance.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//app[@name='maintenance']" position="inside">
+                <block title="Predictive Maintenance" name="maintenance_predict_setting_container">
+                    <setting id="pdm_service" string="Prediction Service"
+                             help="Address of the ML service that predicts equipment failures">
+                        <field name="pdm_service_url"/>
+                        <div class="mt8">
+                            <button name="action_pdm_update_now" type="object" string="Update Now"
+                                    class="btn-link" icon="east"/>
+                        </div>
+                    </setting>
+                    <setting id="pdm_simulator" string="Sensor Replay (demo)"
+                             help="The service replays held-out engines from the NASA dataset as if they were live">
+                        <button name="action_pdm_simulator_tick" type="object" string="Advance 5 cycles"
+                                class="btn-link" icon="fast_forward"/>
+                        <button name="action_pdm_simulator_reset" type="object" string="Restart replay"
+                                class="btn-link" icon="refresh"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_equipment_view_form_pdm" model="ir.ui.view">
+        <field name="name">equipment.form.pdm</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Predictive Health" name="predictive_health">
+                    <group>
+                        <group string="Sensor Link">
+                            <field name="pdm_machine_ref" placeholder="e.g. ENG-069"/>
+                            <field name="pdm_cycle"/>
+                            <field name="pdm_scored_on"/>
+                        </group>
+                        <group string="Prediction">
+                            <field name="pdm_status" widget="badge" decoration-success="pdm_status == 'ok'"
+                                   decoration-warning="pdm_status == 'watch'"
+                                   decoration-danger="pdm_status in ('alert', 'failed')"/>
+                            <field name="pdm_health" widget="progressbar"/>
+                            <field name="pdm_predicted_rul"/>
+                            <field name="pdm_failure_probability"/>
+                        </group>
+                    </group>
+                    <field name="pdm_request_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="create_date" string="Created"/>
+                            <field name="pdm_cycle"/>
+                            <field name="pdm_predicted_rul"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                    <button name="action_pdm_update" type="object" string="Update Prediction" class="btn-secondary"
+                            invisible="not pdm_machine_ref"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="hr_equipment_view_kanban_pdm" model="ir.ui.view">
+        <field name="name">equipment.kanban.pdm</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_view_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//t[@t-name='card']//field[@name='name']" position="after">
+                <div invisible="not pdm_status" class="mt-1">
+                    <field name="pdm_status" widget="badge" decoration-success="pdm_status == 'ok'"
+                           decoration-warning="pdm_status == 'watch'"
+                           decoration-danger="pdm_status in ('alert', 'failed')"/>
+                    <span class="ms-2 text-muted small">Health <field name="pdm_health" widget="integer"/>%</span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_equipment_list_pdm" model="ir.ui.view">
+        <field name="name">equipment.list.pdm</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list create="0" default_order="pdm_predicted_rul"
+                  decoration-danger="pdm_status in ('alert', 'failed')" decoration-warning="pdm_status == 'watch'">
+                <header>
+                    <button name="action_pdm_update_all" type="object" string="Update All" class="btn-primary"
+                            display="always"/>
+                </header>
+                <field name="name"/>
+                <field name="pdm_machine_ref"/>
+                <field name="pdm_cycle"/>
+                <field name="pdm_health" widget="progressbar"/>
+                <field name="pdm_predicted_rul"/>
+                <field name="pdm_failure_probability"/>
+                <field name="pdm_status" widget="badge" decoration-success="pdm_status == 'ok'"
+                       decoration-warning="pdm_status == 'watch'"
+                       decoration-danger="pdm_status in ('alert', 'failed')"/>
+                <field name="maintenance_open_count" string="Open Requests"/>
+                <field name="pdm_scored_on" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_equipment_graph_pdm" model="ir.ui.view">
+        <field name="name">equipment.graph.pdm</field>
+        <field name="model">maintenance.equipment</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <graph string="Equipment by Predicted Status" type="pie">
+                <field name="pdm_status"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_equipment_health" model="ir.actions.act_window">
+        <field name="name">Predictive Health</field>
+        <field name="res_model">maintenance.equipment</field>
+        <field name="view_mode">list,graph,form</field>
+        <field name="domain">[('pdm_machine_ref', '!=', False)]</field>
+        <field name="context">{'list_view_ref': 'maintenance_predict.view_equipment_list_pdm',
+                               'graph_view_ref': 'maintenance_predict.view_equipment_graph_pdm'}</field>
+    </record>
+
+    <record id="hr_equipment_request_view_search_pdm" model="ir.ui.view">
+        <field name="name">equipment.request.search.pdm</field>
+        <field name="model">maintenance.request</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_request_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter name="pdm_auto" string="Created by Prediction" domain="[('pdm_auto', '=', True)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="hr_equipment_request_view_form_pdm" model="ir.ui.view">
+        <field name="name">equipment.request.form.pdm</field>
+        <field name="model">maintenance.request</field>
+        <field name="inherit_id" ref="maintenance.hr_equipment_request_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='maintenance_type']" position="after">
+                <field name="pdm_auto" invisible="not pdm_auto"/>
+                <field name="pdm_cycle" invisible="not pdm_auto"/>
+                <field name="pdm_predicted_rul" invisible="not pdm_auto"/>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem id="menu_equipment_health" name="Predictive Health" parent="maintenance.menu_maintenance_title"
+              action="action_equipment_health" sequence="3"/>
+</odoo>
